@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "481823508776",
+    "project_id": "near-by-store-2eecc",
+    "storage_bucket": "near-by-store-2eecc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481823508776:android:bc1525c0433a817b0d281d",
+        "android_client_info": {
+          "package_name": "com.example.near_by_store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7WEG9KSnpPr0Cc1cvAekpVGKHyX-_g84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
