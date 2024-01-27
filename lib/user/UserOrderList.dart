@@ -6,7 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 
 class UserOrderList extends StatefulWidget {
-  const UserOrderList({Key? key});
+  const UserOrderList({Key? key}) : super(key: key);
 
   @override
   State<UserOrderList> createState() => _UserOrderListState();
@@ -21,7 +21,7 @@ class _UserOrderListState extends State<UserOrderList> {
     final userId = user?.uid;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Order list")),
+      appBar: AppBar(title: const Text("Order list")),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('purchases')
@@ -30,7 +30,7 @@ class _UserOrderListState extends State<UserOrderList> {
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
 
           if (snapshot.hasError) {
@@ -48,7 +48,8 @@ class _UserOrderListState extends State<UserOrderList> {
                   double.tryParse(orderMap['totalAmount'].toString()) ?? 0.0;
 
               // Extract storeId from order data
-              String storeId = orderMap['storeId'] ?? '';
+              dynamic storeIdDynamic = orderMap['storeId'];
+              String storeId = storeIdDynamic is String ? storeIdDynamic : '';
 
               return FutureBuilder(
                 future: fetchStoreDetails(storeId),
@@ -56,7 +57,7 @@ class _UserOrderListState extends State<UserOrderList> {
                     AsyncSnapshot<Map<String, dynamic>?> storeDetailsSnapshot) {
                   if (storeDetailsSnapshot.connectionState ==
                       ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return const CircularProgressIndicator();
                   }
 
                   if (storeDetailsSnapshot.hasError) {
@@ -73,7 +74,7 @@ class _UserOrderListState extends State<UserOrderList> {
                         (context, AsyncSnapshot<double?> userRatingSnapshot) {
                       if (userRatingSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return CircularProgressIndicator();
+                        return const CircularProgressIndicator();
                       }
 
                       if (userRatingSnapshot.hasError) {
@@ -82,14 +83,14 @@ class _UserOrderListState extends State<UserOrderList> {
 
                       double? userRating = userRatingSnapshot.data;
 
+                      String name = storeDetails?['name'] ?? 'Unknown Store';
+
                       return Padding(
                         padding: EdgeInsets.all(10.sp),
                         child: InkWell(
-                          onTap: () {
-                            // TODO: Implement navigation to order details page
-                          },
+                          onTap: () {},
                           child: Container(
-                            height: 200.h,
+                            height: 150.h,
                             width: 100.w,
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20),
@@ -103,13 +104,13 @@ class _UserOrderListState extends State<UserOrderList> {
                                           MainAxisAlignment.spaceAround,
                                       children: [
                                         Padding(
-                                          padding: const EdgeInsets.all(20),
+                                          padding: const EdgeInsets.all(10),
                                           child: Column(
                                             children: [
                                               Container(
-                                                width: 110.w,
-                                                height: 130.h,
-                                                decoration: BoxDecoration(
+                                                width: 100.w,
+                                                height: 110.h,
+                                                decoration: const BoxDecoration(
                                                     image: DecorationImage(
                                                   image: AssetImage(
                                                       "assets/store.jpeg"),
@@ -126,7 +127,7 @@ class _UserOrderListState extends State<UserOrderList> {
                                                     itemSize: 15,
                                                     direction: Axis.horizontal,
                                                     itemBuilder: (context, _) =>
-                                                        Icon(
+                                                        const Icon(
                                                       Icons.star,
                                                       color: Colors.amber,
                                                     ),
@@ -143,26 +144,32 @@ class _UserOrderListState extends State<UserOrderList> {
                                         Padding(
                                           padding: const EdgeInsets.all(20),
                                           child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              SizedBox(
-                                                width: 100,
-                                                child: Text(
-                                                  "Date: ${_formatTimestamp(orderMap['timestamp'])}",
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 12),
-                                                ),
+                                              Text(
+                                                "Store Name: $name",
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 12),
                                               ),
                                               SizedBox(
-                                                width: 100,
-                                                child: Text(
-                                                  "Amount: Rs.${totalAmount.toStringAsFixed(2)}",
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize: 16),
-                                                ),
+                                                height: 8,
+                                              ),
+                                              Text(
+                                                "Date: ${_formatTimestamp(orderMap['timestamp'])}",
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 12),
+                                              ),
+                                              SizedBox(
+                                                height: 8,
+                                              ),
+                                              Text(
+                                                "Amount: Rs.${totalAmount.toStringAsFixed(2)}",
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 16),
                                               ),
                                             ],
                                           ),
@@ -181,7 +188,7 @@ class _UserOrderListState extends State<UserOrderList> {
                                                 child: Text(
                                                   orderMap['status'] ??
                                                       'Pending',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       color: Colors.green,
                                                       fontWeight:
                                                           FontWeight.w800),
@@ -207,8 +214,8 @@ class _UserOrderListState extends State<UserOrderList> {
                                           SizedBox(
                                             width: 200.w,
                                             child: Text(
-                                              storeDetails['name'] ?? '',
-                                              style: TextStyle(
+                                              name,
+                                              style: const TextStyle(
                                                 fontWeight: FontWeight.w500,
                                                 fontSize: 16,
                                               ),
@@ -218,7 +225,7 @@ class _UserOrderListState extends State<UserOrderList> {
                                           ),
                                         ],
                                       )
-                                    : SizedBox(), // If storeDetails is null, show an empty container
+                                    : const SizedBox(), // If storeDetails is null, show an empty container
                               ],
                             ),
                           ),
@@ -244,10 +251,12 @@ class _UserOrderListState extends State<UserOrderList> {
   Future<Map<String, dynamic>?> fetchStoreDetails(String storeId) async {
     try {
       // Check if storeId is empty or null
-      if (storeId == null || storeId.isEmpty) {
+      if (storeId.isEmpty) {
         print('Error: Invalid storeId');
         return null;
       }
+
+      print('Fetching storeId: $storeId'); // Print storeId to the console
 
       final storeSnapshot = await FirebaseFirestore.instance
           .collection('add_store')
@@ -255,17 +264,16 @@ class _UserOrderListState extends State<UserOrderList> {
           .get();
 
       // Check if the store exists
-      if (!storeSnapshot.exists) {
+      if (storeSnapshot.exists) {
+        final storeData = storeSnapshot.data() as Map<String, dynamic>;
+
+        return {
+          'name': storeData['name'],
+        };
+      } else {
         print('Error: Store not found for storeId: $storeId');
         return null;
       }
-
-      final storeData = storeSnapshot.data() as Map<String, dynamic>;
-
-      return {
-        'name': storeData['name'],
-        'image': storeData['image'],
-      };
     } catch (e) {
       print('Error fetching store details: $e');
       return null;
@@ -286,8 +294,7 @@ class _UserOrderListState extends State<UserOrderList> {
 
         if (ratingSnapshot.docs.isNotEmpty) {
           // If a rating exists, return the first one
-          final ratingData =
-              ratingSnapshot.docs.first.data() as Map<String, dynamic>;
+          final ratingData = ratingSnapshot.docs.first.data();
           return ratingData['rating']?.toDouble();
         }
       }
@@ -304,11 +311,11 @@ class _UserOrderListState extends State<UserOrderList> {
       final user = _auth.currentUser;
       if (user != null) {
         final userId = user.uid;
-        final userName = user.displayName ?? 'Unknown User';
+        final name = user.displayName ?? 'Unknown User';
 
         await FirebaseFirestore.instance.collection('reviews').add({
           'userId': userId,
-          'userName': userName,
+          'name': name,
           'orderId': orderId,
           'rating': rating,
           'timestamp': FieldValue.serverTimestamp(),

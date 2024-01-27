@@ -219,7 +219,10 @@ class _StorekeeperLoginState extends State<StorekeeperLogin> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const StorekeeeperOrderView(),
+            builder: (context) => StorekeeeperOrderView(
+              userId: userCredential.user?.uid ??
+                  '', // Pass userId to the next page
+            ),
           ),
         );
       } else {

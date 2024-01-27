@@ -69,6 +69,7 @@ class _UserCartState extends State<UserCart> {
 
     if (user != null && user.uid != null) {
       if (cartItems.isEmpty) {
+        // Display a dialog if the cart is empty
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -114,6 +115,7 @@ class _UserCartState extends State<UserCart> {
         'storeId': cartItems.map((item) => item.storeId).toList(),
         'productName': cartItems.map((item) => item.name).toList(),
         'itemCount': cartItems.map((item) => item.itemCount).toList(),
+        'status': 'Pending', // Add the status field with the value 'Pending'
       });
 
       for (final item in cartItems) {
@@ -340,8 +342,7 @@ class CartItem {
   final String imageUrl;
   final String productId;
   final int itemCount;
-  final String storeId; // Add storeId to CartItem
-
+  final String storeId;
   CartItem({
     required this.id,
     required this.name,

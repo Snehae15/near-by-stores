@@ -24,7 +24,7 @@ class LandingPage extends StatelessWidget {
               );
             },
             child: const Text(
-              'Administrator Login',
+              'Admin Login',
               style: TextStyle(color: Colors.black),
             ),
           ),

@@ -41,7 +41,7 @@ class _UserState extends State<User> {
               var user = snapshot.data!.docs[index];
               var documentId = user.id; // get the document id
               var name = user['name'];
-              var phonenumber = user['phonenumber'];
+              var phonenumber = user['phonenumber'] ?? 'No Phone Number';
 
               return Padding(
                 padding: EdgeInsets.all(10.sp),

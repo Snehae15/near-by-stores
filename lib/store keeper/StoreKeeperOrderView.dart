@@ -7,16 +7,17 @@ import 'ST StoreList.dart';
 import 'STReview.dart';
 
 class StorekeeeperOrderView extends StatefulWidget {
-  const StorekeeeperOrderView({Key? key}) : super(key: key);
+  const StorekeeeperOrderView({Key? key, required String userId})
+      : super(key: key);
 
   @override
   State<StorekeeeperOrderView> createState() => _StorekeeeperOrderViewState();
 }
 
 class _StorekeeeperOrderViewState extends State<StorekeeeperOrderView> {
-  // You can replace '' and '0.0' with the actual userId and totalAmount
   final String userId = '';
   final double totalAmount = 0.0;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -86,17 +87,18 @@ class _StorekeeeperOrderViewState extends State<StorekeeeperOrderView> {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            StorekeepOrderList(
-                // userId: userId,
-                // totalAmount: totalAmount,
-                ),
-            StStoreList(),
-            STReview(),
-            STprofile(),
-          ],
-        ),
+        body: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : TabBarView(
+                children: [
+                  StorekeepOrderList(),
+                  StStoreList(),
+                  STReview(),
+                  STprofile(),
+                ],
+              ),
       ),
     );
   }

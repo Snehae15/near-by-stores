@@ -70,6 +70,52 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
     return null;
   }
 
+  Future<String?> getStoreName(List<dynamic> storeIdList) async {
+    try {
+      // Assuming that you want to get the name for the first store in the list
+      final storeId = storeIdList.first;
+
+      final storeSnapshot = await FirebaseFirestore.instance
+          .collection('add_store')
+          .where('storeId', isEqualTo: storeId)
+          .where('storeId', whereIn: [storeId])
+          .limit(1)
+          .get();
+
+      if (storeSnapshot.docs.isNotEmpty) {
+        final storeDoc = storeSnapshot.docs.first;
+        final storeData = storeDoc.data();
+
+        if (storeData != null && storeData.containsKey('name')) {
+          return storeData['name'].toString();
+        } else {
+          print(
+              'Store document does not contain "name" field. Store data: $storeData');
+        }
+      } else {
+        print('Store document not found for storeId: $storeId');
+      }
+    } catch (e) {
+      print('Error getting store name: $e');
+    }
+
+    return null;
+  }
+
+  Future<void> printStoreIds() async {
+    try {
+      final purchasesSnapshot =
+          await FirebaseFirestore.instance.collection('purchases').get();
+
+      for (final purchaseDoc in purchasesSnapshot.docs) {
+        final storeId = purchaseDoc['storeId'];
+        print(' the StoreId: $storeId');
+      }
+    } catch (e) {
+      print('Error fetching storeIds: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +138,9 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
             Timestamp timestampB = b['timestamp'] ?? Timestamp(0, 0);
             return timestampB.compareTo(timestampA);
           });
+
+          // Print storeIds to console
+          printStoreIds();
 
           return ListView.builder(
             itemCount: purchases.length,
@@ -124,57 +173,74 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
                     Timestamp timestamp =
                         purchases[index]['timestamp'] ?? Timestamp(0, 0);
                     DateTime dateTime = timestamp.toDate();
+                    String status = purchases[index]['status'] ?? 'Pending';
 
-                    String formattedDate =
-                        intl.DateFormat('dd MMM yyyy').format(dateTime);
+                    return FutureBuilder(
+                      future: getStoreName(purchases[index]['storeId']),
+                      builder:
+                          (context, AsyncSnapshot<String?> storeNameSnapshot) {
+                        if (storeNameSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Container(
+                            height: 100,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
 
-                    return Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: const Color(0xffD5F1E9),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
+                        String shopName = storeNameSnapshot.data ?? 'Unknown';
+                        String formattedDate =
+                            intl.DateFormat('dd MMM yyyy').format(dateTime);
+
+                        return Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Container(
+                            height: 110,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: const Color(0xffD5F1E9),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage:
-                                        AssetImage("assets/Ellipse 4.jpg"),
-                                  ),
+                                Row(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: CircleAvatar(
+                                        radius: 30,
+                                        backgroundImage:
+                                            AssetImage("assets/Ellipse 4.jpg"),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.all(15),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(name),
+                                          Text(formattedDate),
+                                          Text('Status: $status'),
+                                          Text('Shop Name: $shopName'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(name),
-                                      Text(
-                                          formattedDate), // Show formatted date
-                                    ],
-                                  ),
-                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.currency_rupee),
+                                    ),
+                                    Text(" ${purchases[index]['totalAmount']}"),
+                                  ],
+                                )
                               ],
                             ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: const Icon(Icons.currency_rupee),
-                                ),
-                                Text(" ${purchases[index]['totalAmount']}"),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
