@@ -72,13 +72,10 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
 
   Future<String?> getStoreName(List<dynamic> storeIdList) async {
     try {
-      // Assuming that you want to get the name for the first store in the list
       final storeId = storeIdList.first;
-
       final storeSnapshot = await FirebaseFirestore.instance
           .collection('add_store')
           .where('storeId', isEqualTo: storeId)
-          .where('storeId', whereIn: [storeId])
           .limit(1)
           .get();
 
@@ -108,11 +105,54 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
           await FirebaseFirestore.instance.collection('purchases').get();
 
       for (final purchaseDoc in purchasesSnapshot.docs) {
-        final storeId = purchaseDoc['storeId'];
-        print(' the StoreId: $storeId');
+        final storeIds = purchaseDoc['storeId'];
+
+        if (storeIds is List && storeIds.isNotEmpty) {
+          final storeId = storeIds.first;
+          print(' the StoreId: $storeId');
+          await checkAndShowOrder(storeId);
+        } else {
+          print('Invalid storeIds format: $storeIds');
+        }
       }
     } catch (e) {
       print('Error fetching storeIds: $e');
+    }
+  }
+
+  Future<void> checkAndShowOrder(String storeId) async {
+    try {
+      final storeSnapshot = await FirebaseFirestore.instance
+          .collection('add_store')
+          .doc(storeId)
+          .get();
+
+      if (storeSnapshot.exists) {
+        final storeData = storeSnapshot.data();
+        final storeUserId = storeData?['userId'];
+
+        if (storeUserId != null) {
+          final storeKeeperSnapshot = await FirebaseFirestore.instance
+              .collection('store_keeper')
+              .where('userId', isEqualTo: storeUserId)
+              .limit(1)
+              .get();
+
+          if (storeKeeperSnapshot.docs.isNotEmpty) {
+            // The current user is a store keeper for this store, show the order
+            print('Show order for storeId: $storeId');
+            // Now you can display the order details as needed
+          } else {
+            print('Current user is not a store keeper for storeId: $storeId');
+          }
+        } else {
+          print('UserId not found for storeId: $storeId');
+        }
+      } else {
+        print('Store not found for storeId: $storeId');
+      }
+    } catch (e) {
+      print('Error checking and showing order: $e');
     }
   }
 
@@ -130,9 +170,11 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
             return Text('Error: ${snapshot.error}');
           }
 
-          List<QueryDocumentSnapshot> purchases = snapshot.data!.docs;
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-          // Sort purchases based on timestamp in descending order
+          List<QueryDocumentSnapshot> purchases = snapshot.data!.docs;
           purchases.sort((a, b) {
             Timestamp timestampA = a['timestamp'] ?? Timestamp(0, 0);
             Timestamp timestampB = b['timestamp'] ?? Timestamp(0, 0);
