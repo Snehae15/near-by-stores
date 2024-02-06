@@ -28,7 +28,7 @@ class LandingPage extends StatelessWidget {
               style: TextStyle(color: Colors.black),
             ),
           ),
-          const SizedBox(width: 16), // Adjust the spacing as needed
+          const SizedBox(width: 16),
         ],
       ),
       body: SingleChildScrollView(

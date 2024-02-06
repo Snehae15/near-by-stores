@@ -21,7 +21,6 @@ class _StoreKeeperProductState extends State<StoreKeeperProduct> {
           .doc(productId)
           .delete();
 
-      // Show a success message or handle UI update if needed
       Fluttertoast.showToast(
         msg: "Product deleted successfully!",
         toastLength: Toast.LENGTH_SHORT,

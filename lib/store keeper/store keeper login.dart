@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:near_by_store/store%20keeper/StoreKeeperOrderView.dart';
 import 'package:near_by_store/store%20keeper/store%20keeper%20register.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StorekeeperLogin extends StatefulWidget {
-  const StorekeeperLogin({super.key});
+  const StorekeeperLogin({Key? key}) : super(key: key);
 
   @override
   _StorekeeperLoginState createState() => _StorekeeperLoginState();
@@ -212,17 +213,16 @@ class _StorekeeperLoginState extends State<StorekeeperLogin> {
         password: _passwordController.text,
       );
 
-      // Check if the user exists in the "store_keeper" collection
       bool isStoreKeeper = await checkIfStoreKeeper(userCredential.user?.uid);
 
       if (isStoreKeeper) {
+        // Save userId to shared preferences
+        await _saveUserIdToPrefs(userCredential.user?.uid ?? '');
+
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => StorekeeeperOrderView(
-              userId: userCredential.user?.uid ??
-                  '', // Pass userId to the next page
-            ),
+            builder: (context) => StorekeeeperOrderView(),
           ),
         );
       } else {
@@ -247,6 +247,11 @@ class _StorekeeperLoginState extends State<StorekeeperLogin> {
       print("Error checking if user is a store keeper: $e");
       return false;
     }
+  }
+
+  Future<void> _saveUserIdToPrefs(String userId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('store_keeper_id', userId);
   }
 
   void showToast(String message) {

@@ -1,18 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
-import 'package:near_by_store/store%20keeper/StoreKeeperOrder.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StorekeepOrderList extends StatefulWidget {
-  const StorekeepOrderList({Key? key}) : super(key: key);
+  const StorekeepOrderList({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<StorekeepOrderList> createState() => _StorekeepOrderListState();
 }
 
 class _StorekeepOrderListState extends State<StorekeepOrderList> {
-  String userId = '';
+  late String userId;
 
   @override
   void initState() {
@@ -21,45 +22,22 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
   }
 
   Future<void> fetchUserId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        final userData = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
-        if (userData.exists && userData.data() != null) {
-          setState(() {
-            userId = userData['userId'];
-          });
-        } else {
-          print('User document does not exist or does not contain "userId".');
-        }
-      } catch (e) {
-        print('Error getting user data: $e');
-      }
-    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('store_keeper_id') ?? '';
+    });
+    print('store_keeper_id: $userId');
   }
 
   Future<String?> getUserName(String userId) async {
     try {
       final userSnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .where('userId', isEqualTo: userId)
-          .limit(1)
+          .doc(userId)
           .get();
 
-      if (userSnapshot.docs.isNotEmpty) {
-        final userDoc = userSnapshot.docs.first;
-        final userData = userDoc.data();
-
-        if (userData != null && userData.containsKey('name')) {
-          return userData['name'];
-        } else {
-          print(
-              'User document does not contain "name" field. User data: $userData');
-        }
+      if (userSnapshot.exists) {
+        return userSnapshot['name'];
       } else {
         print('User document not found for userId: $userId');
       }
@@ -75,20 +53,11 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
       final storeId = storeIdList.first;
       final storeSnapshot = await FirebaseFirestore.instance
           .collection('add_store')
-          .where('storeId', isEqualTo: storeId)
-          .limit(1)
+          .doc(storeId)
           .get();
 
-      if (storeSnapshot.docs.isNotEmpty) {
-        final storeDoc = storeSnapshot.docs.first;
-        final storeData = storeDoc.data();
-
-        if (storeData != null && storeData.containsKey('name')) {
-          return storeData['name'].toString();
-        } else {
-          print(
-              'Store document does not contain "name" field. Store data: $storeData');
-        }
+      if (storeSnapshot.exists) {
+        return storeSnapshot['name'].toString();
       } else {
         print('Store document not found for storeId: $storeId');
       }
@@ -99,28 +68,7 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
     return null;
   }
 
-  Future<void> printStoreIds() async {
-    try {
-      final purchasesSnapshot =
-          await FirebaseFirestore.instance.collection('purchases').get();
-
-      for (final purchaseDoc in purchasesSnapshot.docs) {
-        final storeIds = purchaseDoc['storeId'];
-
-        if (storeIds is List && storeIds.isNotEmpty) {
-          final storeId = storeIds.first;
-          print(' the StoreId: $storeId');
-          await checkAndShowOrder(storeId);
-        } else {
-          print('Invalid storeIds format: $storeIds');
-        }
-      }
-    } catch (e) {
-      print('Error fetching storeIds: $e');
-    }
-  }
-
-  Future<void> checkAndShowOrder(String storeId) async {
+  Future<bool> isUserAllowed(String storeId) async {
     try {
       final storeSnapshot = await FirebaseFirestore.instance
           .collection('add_store')
@@ -128,32 +76,16 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
           .get();
 
       if (storeSnapshot.exists) {
-        final storeData = storeSnapshot.data();
-        final storeUserId = storeData?['userId'];
-
-        if (storeUserId != null) {
-          final storeKeeperSnapshot = await FirebaseFirestore.instance
-              .collection('store_keeper')
-              .where('userId', isEqualTo: storeUserId)
-              .limit(1)
-              .get();
-
-          if (storeKeeperSnapshot.docs.isNotEmpty) {
-            // The current user is a store keeper for this store, show the order
-            print('Show order for storeId: $storeId');
-            // Now you can display the order details as needed
-          } else {
-            print('Current user is not a store keeper for storeId: $storeId');
-          }
-        } else {
-          print('UserId not found for storeId: $storeId');
-        }
+        final storeUserId = storeSnapshot['userId'];
+        return storeUserId == userId;
       } else {
-        print('Store not found for storeId: $storeId');
+        print('Store document not found for storeId: $storeId');
       }
     } catch (e) {
-      print('Error checking and showing order: $e');
+      print('Error checking user permission: $e');
     }
+
+    return false;
   }
 
   @override
@@ -181,111 +113,105 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
             return timestampB.compareTo(timestampA);
           });
 
-          // Print storeIds to console
-          printStoreIds();
+          if (purchases.isEmpty) {
+            return Center(child: Text('No orders available'));
+          }
 
           return ListView.builder(
             itemCount: purchases.length,
             itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StoreKeeperOrder(
-                        totalAmount: purchases[index]['totalAmount'],
-                        userId: userId,
-                        purchaseId: purchases[index].id,
-                      ),
-                    ),
-                  );
-                },
-                child: FutureBuilder(
-                  future: getUserName(purchases[index]['userId']),
-                  builder: (context, AsyncSnapshot<String?> userNameSnapshot) {
-                    if (userNameSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return Container(
-                        height: 100,
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
+              List<dynamic> storeIds = purchases[index]['storeId'];
+              return FutureBuilder(
+                future: Future.wait([
+                  getUserName(purchases[index]['userId']),
+                  getStoreName(storeIds),
+                  isUserAllowed(storeIds.first),
+                ]),
+                builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      height: 100,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                    String name = userNameSnapshot.data ?? 'Unknown';
+                  final userName = snapshot.data![0] as String?;
+                  final storeName = snapshot.data![1] as String?;
+                  final isAllowed = snapshot.data![2] as bool;
+
+                  if (isAllowed) {
                     Timestamp timestamp =
                         purchases[index]['timestamp'] ?? Timestamp(0, 0);
                     DateTime dateTime = timestamp.toDate();
+                    String formattedDate =
+                        intl.DateFormat('dd MMM yyyy').format(dateTime);
                     String status = purchases[index]['status'] ?? 'Pending';
 
-                    return FutureBuilder(
-                      future: getStoreName(purchases[index]['storeId']),
-                      builder:
-                          (context, AsyncSnapshot<String?> storeNameSnapshot) {
-                        if (storeNameSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Container(
-                            height: 100,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-
-                        String shopName = storeNameSnapshot.data ?? 'Unknown';
-                        String formattedDate =
-                            intl.DateFormat('dd MMM yyyy').format(dateTime);
-
-                        return Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Container(
-                            height: 110,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: const Color(0xffD5F1E9),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    return Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Container(
+                        height: 110,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: const Color(0xffD5F1E9),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage:
-                                            AssetImage("assets/Ellipse 4.jpg"),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(15),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(name),
-                                          Text(formattedDate),
-                                          Text('Status: $status'),
-                                          Text('Shop Name: $shopName'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage:
+                                        AssetImage("assets/Ellipse 4.jpg"),
+                                  ),
                                 ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.currency_rupee),
-                                    ),
-                                    Text(" ${purchases[index]['totalAmount']}"),
-                                  ],
-                                )
+                                Padding(
+                                  padding: EdgeInsets.all(15),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userName ?? 'Unknown',
+                                        style: TextStyle(
+                                            color: Colors.brown, fontSize: 20),
+                                      ),
+                                      Text(formattedDate),
+                                      Text('Status: $status',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                          )),
+                                      Text(
+                                        'Shop Name: $storeName',
+                                        style: TextStyle(color: Colors.orange),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                        );
-                      },
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: Icon(Icons.currency_rupee),
+                                ),
+                                Text(" ${purchases[index]['totalAmount']}",
+                                    style: TextStyle(
+                                        color: Colors.green, fontSize: 20)),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
                     );
-                  },
-                ),
+                  } else {
+                    return SizedBox();
+                  }
+                },
               );
             },
           );

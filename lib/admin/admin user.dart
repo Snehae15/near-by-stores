@@ -9,7 +9,6 @@ class AdminUser extends StatelessWidget {
       });
     } catch (e) {
       print('Error updating user status: $e');
-      // You might want to show a snackbar or a dialog to inform the user about the error.
     }
   }
 

@@ -351,7 +351,7 @@ class _StorekeeperRegisterState extends State<StorekeeperRegister> {
         'userId': uid,
       });
 
-      // Call Cloud Function to send confirmation email
+      //  Cloud Function to send confirmation email
       await FirebaseAuth.instance.currentUser!.sendEmailVerification();
 
       showToast("Registration successful! Confirmation email sent.");

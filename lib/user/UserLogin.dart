@@ -177,7 +177,6 @@ class _UserLoginState extends State<UserLogin> {
                     ),
                     child: TextButton(
                       onPressed: () async {
-                        // Access the entered email and password using _emailController.text and _passwordController.text
                         String email = _emailController.text;
                         String password = _passwordController.text;
 
@@ -192,9 +191,6 @@ class _UserLoginState extends State<UserLogin> {
                           if (userCredential.user != null) {
                             // User is logged in
                             print("Login successful");
-
-                            // You can add additional checks here if needed
-                            // For example, check if the user is an admin or has certain permissions
 
                             Fluttertoast.showToast(
                               msg: "Login successful",

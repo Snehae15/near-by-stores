@@ -101,7 +101,6 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  // Use a placeholder image or default avatar if needed
                   backgroundImage: const AssetImage("assets/Ellipse 4.jpg")
                       as ImageProvider<Object>?,
                 ),
