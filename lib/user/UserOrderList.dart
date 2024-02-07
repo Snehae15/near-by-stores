@@ -39,6 +39,7 @@ class _UserOrderListState extends State<UserOrderList> {
         stream: FirebaseFirestore.instance
             .collection('purchases')
             .where('userId', isEqualTo: currentUserId)
+            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

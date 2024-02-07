@@ -21,7 +21,7 @@ class _STprofileState extends State<STprofile> {
   String _phonenumber = '';
   String _pincode = '';
   String _address = '';
-  String _profileImageUrl = '';
+
   bool _isLoading = true;
 
   @override
@@ -57,7 +57,6 @@ class _STprofileState extends State<STprofile> {
         _phonenumber = userSnapshot['phonenumber'] ?? '';
         _pincode = userSnapshot['pincode'] ?? '';
         _address = userSnapshot['address'] ?? '';
-        _profileImageUrl = userSnapshot['profileImageUrl'] ?? '';
       });
     } catch (e) {
       print('Error fetching user data: $e');
@@ -113,15 +112,15 @@ class _STprofileState extends State<STprofile> {
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         child: CircleAvatar(
                           radius: 80,
-                          backgroundImage: _profileImageUrl.isNotEmpty
-                              ? NetworkImage(_profileImageUrl)
-                                  as ImageProvider<Object>?
-                              : const AssetImage("assets/Ellipse 4.jpg"),
+                          backgroundImage: AssetImage("assets/Ellipse 4.jpg"),
                         ),
                       ),
                       Column(
                         children: [
-                          Text("Hey, $_name"),
+                          Text(
+                            "Hey, $_name",
+                            style: TextStyle(color: Colors.black, fontSize: 24),
+                          ),
                         ],
                       ),
                     ],
@@ -202,6 +201,34 @@ class _STprofileState extends State<STprofile> {
                                   SizedBox(
                                     width: 80.w,
                                     child: const Text(
+                                      "Pincode",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text(":"),
+                                  ),
+                                  SizedBox(
+                                    width: 200.w,
+                                    child: Text(
+                                      _pincode,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 80.w,
+                                    child: const Text(
                                       "Address",
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700),
@@ -218,7 +245,7 @@ class _STprofileState extends State<STprofile> {
                                       style: const TextStyle(
                                           fontWeight: FontWeight.w700),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),

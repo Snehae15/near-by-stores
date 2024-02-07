@@ -48,7 +48,6 @@ class _UserEditProfileState extends State<UserEditProfile> {
 
   Future<void> _saveChanges() async {
     try {
-      // Update user data in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_user!.uid)
@@ -67,7 +66,6 @@ class _UserEditProfileState extends State<UserEditProfile> {
       );
     } catch (e) {
       print('Error saving changes: $e');
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Failed to update profile. Please try again.'),
@@ -98,7 +96,6 @@ class _UserEditProfileState extends State<UserEditProfile> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  // Use a placeholder image or default avatar if needed
                   backgroundImage: const AssetImage("assets/Ellipse 4.jpg")
                       as ImageProvider<Object>?,
                 ),

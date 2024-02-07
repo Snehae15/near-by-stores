@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StoreKeeperEditprofile extends StatefulWidget {
   const StoreKeeperEditprofile({Key? key}) : super(key: key);
@@ -15,14 +16,13 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
   String _name = '';
   String _email = '';
   String _phonenumber = '';
-  String _pincode = '';
   String _address = '';
+  String _pincode = '';
 
   @override
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
-
     if (_user != null) {
       _fetchUserData();
     }
@@ -36,12 +36,24 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
             .doc(_user!.uid)
             .get();
 
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+
         setState(() {
-          _email = userSnapshot['email'] ?? '';
-          _phonenumber = userSnapshot['phonenumber'] ?? '';
-          _pincode = userSnapshot['pincode'] ?? '';
-          _address = userSnapshot['address'] ?? '';
-          _name = userSnapshot['name'] ?? '';
+          _email = userSnapshot['email'] ??
+              prefs.getString('store_keeper_email') ??
+              '';
+          _phonenumber = userSnapshot['phonenumber'] ??
+              prefs.getString('store_keeper_phonenumber') ??
+              '';
+          _pincode = userSnapshot['pincode'] ??
+              prefs.getString('store_keeper_pincode') ??
+              '';
+          _address = userSnapshot['address'] ??
+              prefs.getString('store_keeper_address') ??
+              '';
+          _name = userSnapshot['name'] ??
+              prefs.getString('store_keeper_name') ??
+              '';
         });
       } catch (e) {
         print('Error fetching user data: $e');
@@ -51,7 +63,6 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
 
   Future<void> _saveChanges() async {
     try {
-      // Update user data in Firestore
       await FirebaseFirestore.instance
           .collection('store_keeper')
           .doc(_user!.uid)
@@ -59,9 +70,16 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
         'name': _name,
         'email': _email,
         'phonenumber': _phonenumber,
-        'pincode': _pincode,
         'address': _address,
+        'pincode': _pincode,
       });
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('store_keeper_email', _email);
+      prefs.setString('store_keeper_phonenumber', _phonenumber);
+      prefs.setString('store_keeper_address', _address);
+      prefs.setString('store_keeper_name', _name);
+      prefs.setString('store_keeper_pincode', _pincode);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -70,7 +88,6 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
       );
     } catch (e) {
       print('Error saving changes: $e');
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Failed to update profile. Please try again.'),
@@ -124,6 +141,11 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
                             (value) => _email = value, Icons.email),
                         _buildTextField("Phone number", _phonenumber,
                             (value) => _phonenumber = value, Icons.phone),
+                        _buildTextField(
+                            "Pincode",
+                            _pincode,
+                            (value) => _pincode = value,
+                            Icons.home_repair_service),
                         _buildTextField("Address", _address,
                             (value) => _address = value, Icons.home),
                       ],
@@ -165,8 +187,7 @@ class _StoreKeeperEditprofileState extends State<StoreKeeperEditprofile> {
                     onChanged: onChanged,
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      hintText: " $label",
-                      hintStyle: TextStyle(color: Colors.grey),
+                      hintStyle: TextStyle(color: Colors.black),
                     ),
                   ),
                   decoration: BoxDecoration(
