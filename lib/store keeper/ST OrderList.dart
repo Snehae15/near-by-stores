@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:near_by_store/store%20keeper/StoreKeeperOrder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorekeepOrderList extends StatefulWidget {
@@ -147,64 +148,81 @@ class _StorekeepOrderListState extends State<StorekeepOrderList> {
                         intl.DateFormat('dd MMM yyyy').format(dateTime);
                     String status = purchases[index]['status'] ?? 'Pending';
 
-                    return Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Container(
-                        height: 110,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: const Color(0xffD5F1E9),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(8),
-                                  child: CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage:
-                                        AssetImage("assets/Ellipse 4.jpg"),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(15),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        userName ?? 'Unknown',
-                                        style: TextStyle(
-                                            color: Colors.brown, fontSize: 20),
-                                      ),
-                                      Text(formattedDate),
-                                      Text('Status: $status',
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                          )),
-                                      Text(
-                                        'Shop Name: $storeName',
-                                        style: TextStyle(color: Colors.orange),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                    return GestureDetector(
+                      onTap: () {
+                        // Navigate to the StoreKeeperOrder screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StoreKeeperOrder(
+                              totalAmount: purchases[index]['totalAmount'],
+                              userId: userId,
+                              purchaseId: purchases[index].id,
                             ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.currency_rupee),
-                                ),
-                                Text(" ${purchases[index]['totalAmount']}",
-                                    style: TextStyle(
-                                        color: Colors.green, fontSize: 20)),
-                              ],
-                            )
-                          ],
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Container(
+                          height: 110,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: const Color(0xffD5F1E9),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(8),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage:
+                                          AssetImage("assets/Ellipse 4.jpg"),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(15),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          userName ?? 'Unknown',
+                                          style: TextStyle(
+                                              color: Colors.brown,
+                                              fontSize: 20),
+                                        ),
+                                        Text(formattedDate),
+                                        Text('Status: $status',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                            )),
+                                        Text(
+                                          'Shop Name: $storeName',
+                                          style:
+                                              TextStyle(color: Colors.orange),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.currency_rupee),
+                                  ),
+                                  Text(" ${purchases[index]['totalAmount']}",
+                                      style: TextStyle(
+                                          color: Colors.green, fontSize: 20)),
+                                ],
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     );

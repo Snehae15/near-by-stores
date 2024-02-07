@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,6 +14,7 @@ class UserOrderList extends StatefulWidget {
 
 class _UserOrderListState extends State<UserOrderList> {
   late String? currentUserId;
+  late FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -43,16 +45,12 @@ class _UserOrderListState extends State<UserOrderList> {
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            print('Waiting for data...');
             return Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
             return Text('Error: ${snapshot.error}');
           }
-
-          print('Received data: ${snapshot.data?.docs}');
 
           final purchases = snapshot.data?.docs ?? [];
 
@@ -82,12 +80,10 @@ class _UserOrderListState extends State<UserOrderList> {
                   }
 
                   if (snapshot.hasError) {
-                    print('Error fetching store details: ${snapshot.error}');
                     return Container();
                   }
 
                   if (!snapshot.hasData || !snapshot.data!.exists) {
-                    print('Store with ID $storeId not found.');
                     return Container();
                   }
 
@@ -104,7 +100,6 @@ class _UserOrderListState extends State<UserOrderList> {
                   if (totalAmountDouble == null ||
                       date == null ||
                       status == null) {
-                    print('Invalid data for purchase $index: $data');
                     return Container();
                   }
 
@@ -131,16 +126,33 @@ class _UserOrderListState extends State<UserOrderList> {
                                       padding: const EdgeInsets.all(10),
                                       child: Column(
                                         children: [
-                                          Container(
-                                            width: 100.w,
-                                            height: 110.h,
-                                            decoration: const BoxDecoration(
-                                              image: DecorationImage(
-                                                image: AssetImage(
-                                                    "assets/store.jpeg"),
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
+                                          FutureBuilder<String>(
+                                            future: getStoreImageUrl(storeId),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              }
+
+                                              if (snapshot.hasError) {
+                                                return Container();
+                                              }
+
+                                              final storeImageUrl =
+                                                snapshot.data ?? '';
+
+                                              return Container(
+                                                width: 100.w,
+                                                height: 110.h,
+                                                decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        'storeImageURL'),
+                                                    fit: BoxFit.fill,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -218,6 +230,26 @@ class _UserOrderListState extends State<UserOrderList> {
     );
   }
 
+  Future<String> getStoreImageUrl(String storeId) async {
+    try {
+      final storeDoc = await FirebaseFirestore.instance
+          .collection('add_store')
+          .doc(storeId)
+          .get();
+
+      if (storeDoc.exists) {
+        final storeData = storeDoc.data() as Map<String, dynamic>;
+        final storeImage = storeData['store_images'] as String?;
+        return storeImage ?? '';
+      } else {
+        return '';
+      }
+    } catch (e) {
+      print('Error fetching store image URL: $e');
+      return '';
+    }
+  }
+
   double? parseTotalAmount(String? totalAmount) {
     if (totalAmount == null) return null;
     try {
@@ -232,5 +264,49 @@ class _UserOrderListState extends State<UserOrderList> {
     return timestamp.toDate().toString();
   }
 
-  void updateRating(String documentId, double rating) {}
+  Future<double?> fetchUserRating(String orderId) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final userId = user.uid;
+
+        final ratingSnapshot = await FirebaseFirestore.instance
+            .collection('reviews')
+            .where('userId', isEqualTo: userId)
+            .where('orderId', isEqualTo: orderId)
+            .get();
+
+        if (ratingSnapshot.docs.isNotEmpty) {
+          // If a rating exists, return the first one
+          final ratingData = ratingSnapshot.docs.first.data();
+          return ratingData['rating']?.toDouble();
+        }
+      }
+
+      return null; // Return null if no rating is found
+    } catch (e) {
+      print('Error fetching user rating: $e');
+      return null;
+    }
+  }
+
+  Future<void> updateRating(String orderId, double rating) async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final userId = user.uid;
+        final name = user.displayName ?? 'Unknown User';
+
+        await FirebaseFirestore.instance.collection('reviews').add({
+          'userId': userId,
+          'name': name,
+          'orderId': orderId,
+          'rating': rating,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print('Error updating rating: $e');
+    }
+  }
 }

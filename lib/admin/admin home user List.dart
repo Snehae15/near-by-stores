@@ -114,12 +114,10 @@ class _UserState extends State<User> {
     );
   }
 
-  // Function to delete user from Firebase
   void _deleteUser(String documentId) async {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(documentId)
         .delete();
-    // Optionally, you can add a feedback or handle the deletion completion.
   }
 }
