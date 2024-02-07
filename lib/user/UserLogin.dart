@@ -1,14 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:near_by_store/user/UserHome.dart';
 import 'package:near_by_store/user/UserRegister.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserLogin extends StatefulWidget {
   const UserLogin({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<UserLogin> createState() => _UserLoginState();
@@ -27,14 +27,14 @@ class _UserLoginState extends State<UserLogin> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.only(top: 50.h),
+              padding: EdgeInsets.only(top: 50),
               child: SafeArea(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      height: 140.h,
-                      width: 140.w,
+                      height: 140,
+                      width: 140,
                       decoration: const BoxDecoration(
                         image: DecorationImage(
                           image: AssetImage("assets/store 1.jpg"),
@@ -50,9 +50,7 @@ class _UserLoginState extends State<UserLogin> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
-                  padding: EdgeInsets.all(
-                    20,
-                  ),
+                  padding: EdgeInsets.all(20),
                   child: Text(
                     "LOGIN",
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
@@ -61,15 +59,15 @@ class _UserLoginState extends State<UserLogin> {
               ],
             ),
             Padding(
-              padding: EdgeInsets.only(left: 50.w),
+              padding: EdgeInsets.only(left: 50),
               child: Row(
                 children: [
                   Icon(
                     Icons.email,
                     color: Colors.grey,
-                    size: 20.sp,
+                    size: 20,
                   ),
-                  SizedBox(width: 10.w),
+                  SizedBox(width: 10),
                   const Text(
                     "Email",
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
@@ -83,11 +81,11 @@ class _UserLoginState extends State<UserLogin> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 300.w,
-                    height: 50.h,
+                    width: 300,
+                    height: 50,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey, width: 2),
-                      borderRadius: BorderRadius.circular(20.sp),
+                      borderRadius: BorderRadius.circular(20),
                       color: Colors.white,
                     ),
                     child: TextFormField(
@@ -103,15 +101,15 @@ class _UserLoginState extends State<UserLogin> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(left: 50.w, top: 30.h),
+              padding: EdgeInsets.only(left: 50, top: 30),
               child: Row(
                 children: [
                   Icon(
                     Icons.lock,
                     color: Colors.grey,
-                    size: 20.sp,
+                    size: 20,
                   ),
-                  SizedBox(width: 10.w),
+                  SizedBox(width: 10),
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Text(
@@ -129,11 +127,11 @@ class _UserLoginState extends State<UserLogin> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 300.w,
-                    height: 50.h,
+                    width: 300,
+                    height: 50,
                     decoration: BoxDecoration(
                       border: Border.all(width: 2, color: Colors.grey),
-                      borderRadius: BorderRadius.circular(20.sp),
+                      borderRadius: BorderRadius.circular(20),
                       color: Colors.white,
                     ),
                     child: TextFormField(
@@ -149,7 +147,7 @@ class _UserLoginState extends State<UserLogin> {
                                 ? Icons.visibility
                                 : Icons.visibility_off,
                             color: Colors.grey,
-                            size: 20.sp,
+                            size: 20,
                           ),
                           onPressed: () {
                             setState(() {
@@ -164,15 +162,15 @@ class _UserLoginState extends State<UserLogin> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(top: 90.h),
+              padding: EdgeInsets.only(top: 90),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 190.w,
-                    height: 50.h,
+                    width: 190,
+                    height: 50,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15.sp),
+                      borderRadius: BorderRadius.circular(15),
                       color: const Color(0xff4D6877),
                     ),
                     child: TextButton(
@@ -191,6 +189,11 @@ class _UserLoginState extends State<UserLogin> {
                           if (userCredential.user != null) {
                             // User is logged in
                             print("Login successful");
+
+                            // Save user ID to SharedPreferences
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            prefs.setString('userId', userCredential.user!.uid);
 
                             Fluttertoast.showToast(
                               msg: "Login successful",
